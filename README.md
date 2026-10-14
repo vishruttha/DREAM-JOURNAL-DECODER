@@ -1,4 +1,4 @@
-# Dream Journal Decoder 🌙✨
+# Dream Journal Decoder 
 ### Second-Year Computer Science & Engineering (CSE) Mini-Project
 **Core DSA Focus:** Hash Table / Hash Map (Python Dictionary) for Subconscious Motif & Frequency Analytics  
 **Tech Stack:** Python 3.11 &bull; Flask &bull; SQLite3 &bull; ReportLab &bull; Vanilla JavaScript &bull; CSS3 &bull; Chart.js
