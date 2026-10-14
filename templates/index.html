@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dream Journal Decoder — Celestial Dream Observatory &amp; Personal Journal</title>
+  <meta name="description" content="A private, celestial-themed dream journal to record narratives, explore recurring subconscious symbols, visualize emotional landscapes, and export elegant PDF reports." />
+
+  <!-- Google Fonts: Cormorant Garamond, Plus Jakarta Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Celestial Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <!-- Animated Celestial Starfield Canvas -->
+  <canvas id="starfield"></canvas>
+
+  <div class="app-container">
+    <!-- Header Navigation -->
+    <header class="header-bar">
+      <div class="brand" onclick="switchTab('dashboard')">
+        <div class="brand-icon">🌙</div>
+        <div class="brand-text">
+          <h1>Dream Journal Decoder</h1>
+          <p>Personal Dream Sanctuary &amp; Motif Observatory</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn active" data-tab="dashboard">
+          <span>✨</span> Universe
+        </button>
+        <button class="nav-tab-btn" data-tab="journal">
+          <span>📖</span> Journal Library
+        </button>
+        <button class="nav-tab-btn" data-tab="symbols">
+          <span>🔮</span> Recurring Symbols
+        </button>
+        <button class="nav-tab-btn" data-tab="emotions">
+          <span>🎭</span> Emotional Landscape
+        </button>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="header-actions">
+        <button id="btn-new-dream" class="btn-primary">
+          <span>+</span> Record Dream
+        </button>
+        <button id="btn-export-pdf" class="btn-pdf" title="Export & View Beautiful PDF Report" type="button">
+          <span>📄</span> Export PDF
+        </button>
+
+        <!-- Secondary Data Options Dropdown -->
+        <div class="dropdown" id="dropdown-options">
+          <button id="btn-options-toggle" class="btn-secondary" title="Data & Backup Options" type="button" aria-haspopup="true" aria-expanded="false">
+            <span>⚙️</span> Options <span style="font-size: 0.65rem; opacity: 0.7; margin-left: 0.15rem;">▼</span>
+          </button>
+          <div class="dropdown-menu" id="dropdown-menu-options">
+            <a href="/api/export/pdf?view=1" target="_blank" class="dropdown-item">
+              👁️ View / Print PDF Report
+            </a>
+            <a href="/api/export/pdf" download class="dropdown-item">
+              📄 Direct Download PDF
+            </a>
+            <a href="/api/export/json" class="dropdown-item">
+              📥 Backup Data (JSON)
+            </a>
+            <button id="btn-load-sample" class="dropdown-item" type="button">
+              ✨ Load Sample Dreams
+            </button>
+            <button id="btn-clear-sample" class="dropdown-item" type="button">
+              🧹 Remove Sample Dreams
+            </button>
+            <button id="btn-clear-all" class="dropdown-item" type="button" style="color: #f87171;">
+              ⚠️ Clear Entire Journal
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 1: DASHBOARD ("YOUR DREAM UNIVERSE") -->
+    <!-- ==================================================================== -->
+    <main id="view-dashboard" class="view-section">
+      <!-- Hero Observatory Section -->
+      <div class="hero-card">
+        <div class="hero-glow"></div>
+        <div class="hero-moon-badge" id="hero-lunar-badge">
+          <span>🌒 Waxing Crescent</span> &bull; <span>Subconscious Observatory Active</span>
+        </div>
+        <h2 class="hero-title">Your Celestial Dream Universe.</h2>
+        <p class="hero-desc">
+          Capture night narratives, track recurring emotional currents, and explore subconscious motifs. Reflect on your experiences as meaningful personal metaphors in a private, persistent sanctuary.
+        </p>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button id="btn-hero-record" class="btn-primary">
+            <span>+</span> Record Tonight's Dream
+          </button>
+          <button class="btn-secondary" onclick="switchTab('symbols')">
+            <span>🔮</span> Explore Recurring Symbols
+          </button>
+          <button class="btn-secondary" onclick="switchTab('emotions')">
+            <span>🎭</span> View Emotional Landscape
+          </button>
+          <a href="/api/export/pdf" class="btn-pdf">
+            <span>📄</span> Download Journal PDF
+          </a>
+        </div>
+      </div>
+
+      <!-- Metrics Row -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Total Dreams</span>
+            <span class="metric-icon">📚</span>
+          </div>
+          <div id="metric-total" class="metric-value">0</div>
+          <div class="metric-sub">Archived in persistent storage</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Journaling Streak</span>
+            <span class="metric-icon">🔥</span>
+          </div>
+          <div id="metric-streak" class="metric-value">0 d</div>
+          <div class="metric-sub">Consecutive logging activity</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Most Recurring Motif</span>
+            <span class="metric-icon">✨</span>
+          </div>
+          <div id="metric-top-symbol" class="metric-value" style="font-size: 1.45rem; color: var(--accent-ice);">-</div>
+          <div id="metric-symbol-count" class="metric-sub">-</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Dominant Tone</span>
+            <span class="metric-icon">🎭</span>
+          </div>
+          <div id="metric-top-emotion" class="metric-value" style="font-size: 1.45rem; color: #fde047;">-</div>
+          <div id="metric-emotion-count" class="metric-sub">-</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">Avg Vividness</span>
+            <span class="metric-icon">👁️</span>
+          </div>
+          <div id="metric-vividness" class="metric-value" style="color: #c4b5fd;">0 / 10</div>
+          <div class="metric-sub">Lucidity &amp; sensory clarity index</div>
+        </div>
+      </div>
+
+      <!-- Recurring Symbols Feature Card -->
+      <div class="celestial-card" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <div>
+            <h3 style="font-size: 1.3rem; font-weight: 600; color: #ffffff;">Patterns in Your Dreams</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Frequently detected archetypes and recurring motifs. Click any symbol to explore all related dream records:
+            </p>
+          </div>
+          <button class="btn-secondary" style="font-size: 0.78rem;" onclick="switchTab('symbols')">
+            View All Symbols &rarr;
+          </button>
+        </div>
+
+        <div id="dashboard-symbols-pattern-grid" class="symbols-pattern-grid">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Main Visual Grid: Charts & Patterns -->
+      <div class="dashboard-grid">
+        <!-- Left Column: Recurring Symbols Chart & Activity Timeline -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <div class="celestial-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; color: #ffffff;">Recurring Symbol Frequencies</h3>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+                  Occurrences of primary subconscious motifs identified across entries
+                </p>
+              </div>
+              <button class="btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.65rem;" onclick="switchTab('symbols')">
+                Full Rankings &rarr;
+              </button>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-symbols"></canvas>
+            </div>
+          </div>
+
+          <div class="celestial-card">
+            <h3 style="font-size: 1.25rem; font-weight: 600; color: #ffffff;">Dream Activity Timeline</h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Timeline density of recorded entries across calendar dates
+            </p>
+            <div class="chart-container">
+              <canvas id="chart-timeline"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Emotional Landscape & Emerging Observations -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <!-- Emotional Landscape Card -->
+          <div class="celestial-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; color: #ffffff;">Emotional Landscape</h3>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+                  Distribution of recorded feelings across dreams
+                </p>
+              </div>
+              <button class="btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.65rem;" onclick="switchTab('emotions')">
+                Trends &rarr;
+              </button>
+            </div>
+
+            <div id="dashboard-emotions-chart-container" class="chart-container" style="height: 220px;">
+              <canvas id="chart-emotions"></canvas>
+            </div>
+            <div id="dashboard-emotions-empty-state" class="celestial-empty-state" style="display: none; padding: 1.5rem 1rem;">
+              <div class="empty-state-icon">🎭</div>
+              <div class="empty-state-title" style="font-size: 1rem;">No Emotions Recorded Yet</div>
+              <p class="empty-state-text" style="font-size: 0.78rem; margin-bottom: 0.75rem;">
+                Select emotions like Wonder, Peace, or Joy when recording a dream to visualize your emotional landscape.
+              </p>
+              <button class="btn-primary" style="font-size: 0.78rem; padding: 0.4rem 0.85rem;" onclick="openDreamModal()">
+                Record a Dream
+              </button>
+            </div>
+
+            <!-- Clickable emotion filter pills -->
+            <div id="dashboard-emotion-pills" class="emotion-pills-row" style="margin-top: 0.75rem;">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Emerging Observations Card -->
+          <div class="celestial-card">
+            <h3 style="font-size: 1.25rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🔮</span> Emerging Observations
+            </h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem; margin-bottom: 1rem;">
+              Subconscious reflections and patterns derived from your journal records:
+            </p>
+            <div id="patterns-list">
+              <!-- Populated dynamically via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recently Recorded Dreams -->
+      <div class="celestial-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 600; color: #ffffff;">Recently Recorded Dreams</h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Click any entry to view full narrative and reflective inquiries
+            </p>
+          </div>
+          <button class="btn-secondary" style="font-size: 0.75rem;" onclick="switchTab('journal')">
+            Open Library &rarr;
+          </button>
+        </div>
+
+        <div id="recent-dreams-grid" class="dreams-grid">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </main>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 2: DREAM JOURNAL LIBRARY -->
+    <!-- ==================================================================== -->
+    <main id="view-journal" class="view-section" style="display: none;">
+      <div class="celestial-card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+          <div>
+            <h2 style="font-size: 1.8rem; font-weight: 700; color: #ffffff;">Dream Journal Library</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+              Search, filter, view full narratives, and organize your dream history.
+            </p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-lavender);" id="journal-count">
+              Loading...
+            </div>
+            <button class="btn-primary" style="padding: 0.45rem 0.95rem; font-size: 0.82rem;" onclick="openDreamModal()">
+              <span>+</span> New Entry
+            </button>
+          </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+          <div>
+            <input type="text" id="search-input" class="form-input" placeholder="🔍 Search titles, narrative, symbols, tags..." />
+          </div>
+          <div>
+            <select id="emotion-filter" class="form-select">
+              <option value="">All Recorded Emotions</option>
+              <option value="Wonder">Wonder</option>
+              <option value="Peace">Peace</option>
+              <option value="Joy">Joy</option>
+              <option value="Euphoria">Euphoria</option>
+              <option value="Melancholy">Melancholy</option>
+              <option value="Anxiety">Anxiety</option>
+              <option value="Confusion">Confusion</option>
+              <option value="Fear">Fear</option>
+            </select>
+          </div>
+          <div>
+            <select id="sort-select" class="form-select">
+              <option value="newest">Sort: Newest First</option>
+              <option value="oldest">Sort: Oldest First</option>
+              <option value="title">Sort: Title (A-Z)</option>
+              <option value="vividness">Sort: Highest Vividness</option>
+              <option value="word_count">Sort: Longest Narrative</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Filter Pill Indicator (if filtered) -->
+      <div id="journal-active-filter-bar" style="display: none; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem; font-size: 0.82rem;">
+        <span style="color: var(--text-muted);">Filtered by:</span>
+        <span id="journal-filter-badge" class="tag-pill" style="border-color: var(--accent-violet); color: #ffffff;"></span>
+        <button id="btn-clear-filter" style="background: none; border: none; color: #f87171; cursor: pointer; text-decoration: underline; font-size: 0.78rem;">
+          Clear filter
+        </button>
+      </div>
+
+      <!-- Dreams List Grid -->
+      <div id="all-dreams-grid" class="dreams-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </main>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 3: RECURRING SYMBOLS EXPLORER -->
+    <!-- ==================================================================== -->
+    <main id="view-symbols" class="view-section" style="display: none;">
+      <div class="celestial-card" style="margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.8rem; font-weight: 700; color: #ffffff;">Recurring Dream Symbols</h2>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.35rem; line-height: 1.6;">
+          Explore the subconscious archetypes and recurring motifs identified across your dream narratives.
+          Click any symbol to explore all related dream entries in your journal.
+        </p>
+      </div>
+
+      <div class="celestial-card">
+        <div style="overflow-x: auto;">
+          <table class="dsa-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">Rank</th>
+                <th>Symbol &amp; Archetype</th>
+                <th style="width: 140px;">Occurrences</th>
+                <th style="width: 160px;">Dreams Present</th>
+                <th style="width: 200px;">Share of Activity</th>
+                <th style="width: 120px; text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="symbols-table-body">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==================================================================== -->
+    <!-- VIEW 4: EMOTIONAL LANDSCAPE & TRENDS -->
+    <!-- ==================================================================== -->
+    <main id="view-emotions" class="view-section" style="display: none;">
+      <div class="celestial-card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="font-size: 1.8rem; font-weight: 700; color: #ffffff;">Emotional Landscape &amp; Trends</h2>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.35rem; line-height: 1.6; max-width: 720px;">
+              Observe the emotional currents and shifting tones recorded across your dream history.
+              Select any emotion pill below to filter your journal and explore related entries.
+            </p>
+          </div>
+          <button class="btn-primary" style="font-size: 0.82rem;" onclick="openDreamModal()">
+            <span>+</span> Record Dream with Emotions
+          </button>
+        </div>
+
+        <!-- Emotion Filter Selector Pills -->
+        <div id="emotions-interactive-pills" class="emotion-pills-row" style="margin-top: 1.25rem;">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Dual Charts: Distribution + Trends Timeline -->
+      <div class="dashboard-grid">
+        <!-- Overall Emotion Distribution Doughnut -->
+        <div class="celestial-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div>
+              <h3 style="font-size: 1.2rem; font-weight: 600; color: #ffffff;">Overall Emotion Distribution</h3>
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
+                Proportions of emotions recorded across all journal entries
+              </p>
+            </div>
+            <div id="emotions-dominant-badge" class="badge-tag" style="display: none;"></div>
+          </div>
+
+          <div id="emotions-large-chart-container" class="chart-container-large">
+            <canvas id="chart-emotions-large"></canvas>
+          </div>
+          <div id="emotions-large-empty-state" class="celestial-empty-state" style="display: none;">
+            <div class="empty-state-icon">🎭</div>
+            <div class="empty-state-title">No Emotion Data Logged</div>
+            <p class="empty-state-text">
+              When recording or editing a dream, select emotions like Wonder, Peace, Anxiety, or Joy to build your emotional spectrum.
+            </p>
+            <button class="btn-primary" onclick="openDreamModal()">
+              Record a Dream Now
+            </button>
+          </div>
+        </div>
+
+        <!-- Emotion Trends Timeline Chart -->
+        <div class="celestial-card">
+          <h3 style="font-size: 1.2rem; font-weight: 600; color: #ffffff;">Emotional Trends Over Time</h3>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; margin-bottom: 0.5rem;">
+            Longitudinal frequency of recorded emotions across dream dates
+          </p>
+
+          <div id="emotions-trends-chart-container" class="chart-container-large">
+            <canvas id="chart-emotions-trend"></canvas>
+          </div>
+          <div id="emotions-trends-empty-state" class="celestial-empty-state" style="display: none;">
+            <div class="empty-state-icon">📈</div>
+            <div class="empty-state-title">Awaiting Longitudinal Data</div>
+            <p class="empty-state-text">
+              Record dreams across multiple dates with emotions to view timeline trends.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reflective Guidance Card -->
+      <div class="celestial-card" style="margin-top: 1.5rem; background: rgba(11, 15, 30, 0.6);">
+        <h4 style="font-size: 0.95rem; font-weight: 600; color: #c4b5fd; margin-bottom: 0.35rem;">
+          Personal Introspection &amp; Emotional Reflections
+        </h4>
+        <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;">
+          Dream emotions often mirror waking concerns, creative aspirations, or unresolved thoughts seeking processing during sleep.
+          These indicators are intended as prompts for personal mindfulness and journaling reflection, not clinical psychological assessments.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- MODAL: DREAM EDITOR (CREATE / EDIT) -->
+  <!-- ==================================================================== -->
+  <div id="modal-dream-editor" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-editor-title" style="font-size: 1.4rem; font-weight: 700; color: #ffffff;">Record a Dream Entry</h3>
+        <button class="modal-close" onclick="closeDreamModal()">&times;</button>
+      </div>
+
+      <form id="dream-form">
+        <div class="form-group">
+          <label class="form-label">Dream Title *</label>
+          <input type="text" id="form-title" class="form-input" placeholder="e.g. The Submerged Cathedral of Clocks" required />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+          <div class="form-group">
+            <label class="form-label">Dream Date</label>
+            <input type="date" id="form-date" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Awakening Time</label>
+            <input type="time" id="form-time" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Vividness (1-10)</label>
+            <select id="form-vividness" class="form-select">
+              <option value="10">10 - Lucid Hyper-Real</option>
+              <option value="9">9 - Intensely Palpable</option>
+              <option value="8">8 - Highly Lucid</option>
+              <option value="7" selected>7 - Bright &amp; Sensory</option>
+              <option value="6">6 - Clear Vision</option>
+              <option value="5">5 - Moderate Memory</option>
+              <option value="4">4 - Gentle Haze</option>
+              <option value="3">3 - Scattered</option>
+              <option value="2">2 - Distant Fog</option>
+              <option value="1">1 - Faint Whisper</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <label class="form-label" style="margin-bottom: 0;">Dream Narrative *</label>
+            <span id="editor-word-count" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim);">0 words | 0 characters</span>
+          </div>
+          <textarea id="form-narrative" class="form-textarea" placeholder="Describe the sequence of events, tactile sensations, water, flight, clocks, doors, reflections..." required></textarea>
+        </div>
+
+        <!-- Live Analysis Box -->
+        <div id="live-analysis-box" style="background: rgba(11, 15, 30, 0.6); border: 1px dashed var(--border-subtle); border-radius: 10px; padding: 0.85rem; margin-bottom: 1.25rem;">
+          <p style="color: var(--text-dim); font-size: 0.78rem;">Start writing your dream narrative to see live symbol detection.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Emotional Tones Experienced (Select all that apply)</label>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.65rem; font-size: 0.82rem;">
+            <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+              <input type="checkbox" name="emotions" value="Wonder" /> Wonder
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+              <input type="checkbox" name="emotions" value="Peace" /> Peace
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+              <input type="checkbox" name="emotions" value="Joy" /> Joy
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+              <input type="checkbox" name="emotions" value="Euphoria" /> Euphoria
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+              <input type="checkbox" name="emotions" value="Melancholy" /> Melancholy
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+              <input type="checkbox" name="emotions" value="Anxiety" /> Anxiety
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+              <input type="checkbox" name="emotions" value="Confusion" /> Confusion
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+              <input type="checkbox" name="emotions" value="Fear" /> Fear
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tags (comma-separated)</label>
+          <input type="text" id="form-tags" class="form-input" placeholder="e.g. water, flight, ocean, childhood" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Personal Reflection (Optional)</label>
+          <input type="text" id="form-reflection" class="form-input" placeholder="What waking circumstances or thoughts might connect with this dream?" />
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+          <button type="button" class="btn-secondary" onclick="closeDreamModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Save to Journal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- MODAL: DREAM DETAILS & REFLECTIVE INQUIRIES -->
+  <!-- ==================================================================== -->
+  <div id="modal-dream-detail" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h3 id="detail-title" style="font-size: 1.4rem; font-weight: 700; color: #ffffff;">Dream Title</h3>
+          <div style="font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono); margin-top: 0.2rem;">
+            <span id="detail-date">Date</span> &bull; <span id="detail-vividness" style="color: var(--accent-lavender);">Vividness</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeDreamDetailModal()">&times;</button>
+      </div>
+
+      <!-- Emotions & Tags row -->
+      <div id="detail-emotions-row" style="margin-bottom: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.4rem;"></div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-dim); font-family: var(--font-mono); margin-bottom: 0.4rem;">
+          Narrative
+        </div>
+        <p id="detail-narrative" style="font-size: 0.92rem; line-height: 1.65; color: #e2e8f0; white-space: pre-wrap; background: rgba(11, 15, 30, 0.6); padding: 1.1rem; border-radius: 12px; border: 1px solid var(--border-subtle);"></p>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-dim); font-family: var(--font-mono); margin-bottom: 0.4rem;">
+          Detected Motifs &amp; Socratic Questions
+        </div>
+        <div id="detail-symbols-box"></div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-dim); font-family: var(--font-mono); margin-bottom: 0.4rem;">
+          Personal Reflection
+        </div>
+        <p id="detail-reflection" style="font-size: 0.88rem; color: var(--text-muted); font-style: italic; background: rgba(251, 191, 36, 0.05); border: 1px solid rgba(251, 191, 36, 0.2); padding: 0.85rem; border-radius: 10px;"></p>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+        <button id="btn-detail-delete" class="btn-secondary" style="color: #f87171; border-color: rgba(248, 113, 113, 0.3);">
+          Delete Dream
+        </button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="btn-detail-edit" class="btn-primary">
+            Edit Dream
+          </button>
+          <button class="btn-secondary" onclick="closeDreamDetailModal()">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- MODAL: PDF REPORT READY & DOWNLOAD / PREVIEW -->
+  <!-- ==================================================================== -->
+  <div id="modal-pdf-ready" class="modal-overlay">
+    <div class="modal-content" style="max-width: 480px; text-align: center;">
+      <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">📄✨</div>
+      <h3 style="font-size: 1.45rem; font-weight: 700; color: #ffffff; margin-bottom: 0.5rem;">
+        Your Dream Report is Ready
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem;">
+        Your celestial report containing all recorded narratives, recurring motifs, and overview metrics has been dynamically compiled.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <a id="modal-pdf-view-link" href="/api/export/pdf?view=1" target="_blank" class="btn-primary" style="justify-content: center; text-decoration: none; padding: 0.75rem 1rem;">
+          👁️ Open &amp; Print in New Tab
+        </a>
+        <a id="modal-pdf-download-link" href="/api/export/pdf" download class="btn-pdf" style="justify-content: center; text-decoration: none; padding: 0.75rem 1rem;">
+          📥 Download PDF File
+        </a>
+        <button type="button" class="btn-secondary" onclick="closePdfModal()" style="justify-content: center; margin-top: 0.25rem;">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/stars.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
